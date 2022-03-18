@@ -1,0 +1,2 @@
+0 1 * * *     sh /etc/CCcam.update
+@reboot       sh /etc/CCcam.update

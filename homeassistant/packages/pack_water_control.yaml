@@ -1,0 +1,99 @@
+homeassistant:
+  customize:
+    switch.sonoff_10009f1406_1:
+      icon: 'mdi:pump'
+    switch.sonoff_10009f1406_2:
+      icon: 'mdi:water-pump'
+    switch.sonoff_10009f1406_3:
+      icon: 'mdi:water-pump-off'
+
+    switch.water_valve:
+      templates:
+        icon: >
+          if (state === 'on') return 'mdi:water-pump';
+          return 'mdi:water-pump-off';
+
+##########################################################################################
+# Input
+##########################################################################################
+
+input_boolean:
+  water_valve:
+    name: Valvola acqua generale
+    #initial: off
+    icon: 'mdi:water-pump'
+
+##########################################################################################
+# Switch
+##########################################################################################
+
+switch:
+  - platform: template
+    switches:
+      water_valve:
+        friendly_name: Valvola acqua generale
+        # value_template: >
+        #   {{ is_state('automation.lights_partying', 'on') }}
+        turn_on:
+          - service: script.water_on
+        turn_off:
+          - service: script.water_off
+
+##########################################################################################
+# Sensor
+##########################################################################################
+
+sensor:
+    ### daily autoclave on
+  - platform: history_stats
+    name: "waterpump_daily_activation"
+    entity_id: switch.sonoff_10009f1406_1
+    state: 'on'
+    type: time
+    # starts today at 6 and ends right now
+    start: '{{ now().replace(hour=6, minute=0, second=0) }}'
+    end: '{{ now() }}'
+  #### SENSOR TEMPLATE ####
+  - platform: template
+    sensors:
+      ### Daily Activation Time
+      waterpump_activation_time:
+        friendly_name: 'Waterpump active Today'
+        value_template: >-
+            {% set hours = states('sensor.waterpump_daily_activation') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int %}  
+            {% set hours = (hours - (hours % 1)) | int %}  
+            {{ '%02ih e %02im'%(hours, minutes) }}
+        icon_template: mdi:timelapse
+
+##########################################################################################
+# Automation
+##########################################################################################
+
+automation:
+  - id: '1599162992720'
+    alias: Water On
+    description: ''
+    trigger:
+    - entity_id: input_boolean.water_valve
+      from: 'off'
+      platform: state
+      to: 'on'
+    condition: []
+    action:
+    - service: script.water_on
+      data: {}
+    mode: single
+  - id: '1599162992721'
+    alias: Water Off
+    description: ''
+    trigger:
+    - entity_id: input_boolean.water_valve
+      from: 'on'
+      platform: state
+      to: 'off'
+    condition: []
+    action:
+    - service: script.water_off
+      data: {}
+    mode: single

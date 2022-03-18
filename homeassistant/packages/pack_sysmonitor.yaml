@@ -1,0 +1,37 @@
+homeassistant:
+  customize:
+#     sensor.db_size:
+#       icon: 'mdi:database'
+    sensor.home_assistant_v2_db:
+      icon: 'mdi:database'
+
+sensor:
+#   #https://www.home-assistant.io/components/sensor.sql/
+#   - platform: sql
+#     db_url: !secret db_url
+#     queries:
+#     - name: DB size
+#       query: 'SELECT table_schema "database", Round(Sum(data_length + index_length) / 1048576, 1) "value" FROM information_schema.tables WHERE table_schema="homeassistant" GROUP BY table_schema;'
+#       column: 'value'
+#       unit_of_measurement: MB
+
+  - platform: filesize
+    file_paths:
+      - /config/home-assistant_v2.db
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_free
+      - type: memory_use_percent
+      - type: processor_use
+      - type: last_boot
+      - type: memory_use
+  
+  # - platform: command_line
+  #   name: CPU Temperature
+  #   command: "cat /sys/class/thermal/thermal_zone0/temp"
+  #   # If errors occur, remove degree symbol below
+  #   unit_of_measurement: "°C"
+  #   value_template: '{{ value | multiply(0.001) | round(1) }}'

@@ -1,0 +1,103 @@
+{
+  "plants": [
+    {
+      "plant": {
+        "modules": [
+          {
+            "device": "chronothermostat",
+            "id": "6c663d9f-46fd-c20f-e053-1e182d0aa61c",
+            "name": "ciccio",
+            "capabilities": [
+              {
+                "capability": "function",
+                "canDo": {
+                  "command": {
+                    "do": true
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": true
+                  }
+                }
+              },
+              {
+                "capability": "mode",
+                "canDo": {
+                  "command": {
+                    "do": true
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": true
+                  }
+                }
+              },
+              {
+                "capability": "setPoint",
+                "canDo": {
+                  "command": {
+                    "do": true
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": true
+                  }
+                }
+              },
+              {
+                "capability": "programlist",
+                "canDo": {
+                  "command": {
+                    "do": false
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": false
+                  }
+                }
+              },
+              {
+                "capability": "measures",
+                "canDo": {
+                  "command": {
+                    "do": false
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": true
+                  }
+                }
+              },
+              {
+                "capability": "time",
+                "canDo": {
+                  "command": {
+                    "do": false
+                  },
+                  "request": {
+                    "do": true
+                  },
+                  "notification": {
+                    "do": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "id": "6c663d9f-44fd-c20f-e053-1e182d0aa61c",
+        "name": "casa"
+      }
+    }
+  ]
+}

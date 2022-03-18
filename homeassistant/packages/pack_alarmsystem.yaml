@@ -1,0 +1,84 @@
+### Home Alarm ###
+# Ho configurato l’allarme per attivarsi dopo 30 secondi dal suo inserimento: pending_time: 30,
+# questo solo per “armed_away“, così ho 30 secondi per uscire di casa senza far suonare l’allarme, in gergo viene chiamato “ritardo di uscita“,
+# allo stesso modo ho impostato il “tempo d’ingresso” (delay_time) su 20 secondi per avere il tempo di disattivare l’allarme una volta entrato in casa, 
+# per maggiori dettagli raggiungere la pagina Manual Alarm Control Panel sul sito di Home Assistant
+# https://www.topdigamma.it/casa/domotica/allarme-perimetrale-sensori-xiaomi-aqara-home-assistant/
+# https://www.topdigamma.it/informatica/progetti-raspberry/xiaomi-mi-smart-home-home-assistant-hass-raspberry-pi-3-allarme-casa-domotica/
+# https://www.home-assistant.io/integrations/manual
+alarm_control_panel:
+  - platform: manual
+    name: Home Alarm
+    disarmed:
+      trigger_time: 0
+    armed_home:
+      delay_time: 0
+    armed_away:
+      delay_time: 20
+
+input_datetime:
+  alarm_start_time:
+    name: Alarm start time
+    has_date: false
+    has_time: true
+    # initial: '23:55'
+  alarm_end_time:
+    name: Alarm end time
+    has_date: false
+    has_time: true
+    # initial: '06:00'
+
+input_boolean:
+  alarm_siren:
+    name: Sirena allarme
+    initial: off
+    icon: mdi:alarm-light
+
+timer:
+  alarm_siren:
+    name: Time remaining
+    duration: 180 #Updated this to the number of seconds you wish
+
+automation:
+  - id: start_alarm_siren
+    alias: Start alarm siren
+    #hide_entity: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.alarm_siren
+      to: 'on'
+    action:
+    - service: switch.turn_on
+      entity_id: switch.siren_alarm_switch
+    - service: timer.start
+      data:
+        entity_id: timer.alarm_siren
+
+  - id: stop_alarm_siren
+    alias: Stop alarm siren
+    trigger:
+    - entity_id: input_boolean.alarm_siren
+      platform: state
+      to: 'off'
+    action:
+    - service: switch.turn_off
+      entity_id: switch.siren_alarm_switch
+    - data:
+        entity_id: timer.alarm_siren
+      service: timer.cancel
+    #hide_entity: true
+
+  - id: stop_alarm_siren_timer
+    alias: Stop alarm siren by timer
+    #hide_entity: true
+    trigger:
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.alarm_siren
+    action:
+    - service: switch.turn_off
+      entity_id: switch.siren_alarm_switch
+    - service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.alarm_siren

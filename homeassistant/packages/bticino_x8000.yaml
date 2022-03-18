@@ -1,0 +1,295 @@
+#########################################################
+#                                                       #
+#                        X8000                          #
+#                                                       #
+#########################################################
+
+#### SENSOR ####
+sensor:
+  - platform: command_line
+    name: smarter_config_size
+    command: python3 -c "import os;my_path='/config/.bticino_smarter/smarter.json'; a=True if os.path.exists(my_path) and os.path.getsize(my_path) > 0 else False;print(a)"
+### name
+  - platform: mqtt
+    name: termostato_ciccio_name
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: '{{ value_json.name }}'
+
+    ### temperature
+  - platform: mqtt
+    name: termostato_ciccio_temperature
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: '{{ value_json.temperature }}'
+    icon: mdi:thermometer
+
+    ### uhumidity
+  - platform: mqtt
+    name: termostato_ciccio_humidity
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: '{{ value_json.humidity|int }}'
+    unit_of_measurement: '%'
+    icon: mdi:water-percent
+
+    ### function
+  - platform: mqtt
+    name: termostato_ciccio_function
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.function }}"
+
+    ### mode
+  - platform: mqtt
+    name: termostato_ciccio_mode
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.mode }}"
+
+    ### set point
+  - platform: mqtt
+    name: termostato_ciccio_set_point
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.setpoint|round (1) }}"
+    icon: mdi:thermostat
+
+    ### state
+  - platform: mqtt
+    name: termostato_ciccio_state
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.state }}"
+    icon: mdi:power
+
+  - platform: history_stats
+    name: termostato_ciccio_daily_activation
+    entity_id: sensor.termostato_ciccio_state
+    state: 'ACTIVE'
+    type: time
+    start: '{{ now().replace(hour=0, minute=0, second=0) }}'
+    end: '{{ now() }}'
+
+    ### program
+  - platform: mqtt
+    name: termostato_ciccio_program
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.program }}"
+    icon: mdi:calendar-clock
+
+    ### time remainig
+  - platform: mqtt
+    name: termostato_ciccio_remaining_time
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.remaining_time }}"
+    
+    ### time remainig minutes
+  - platform: mqtt
+    name: termostato_ciccio_remaining_time_minutes
+    state_topic: /bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status
+    value_template: "{{ value_json.remaining_time_minutes }}"
+
+  - platform: template
+    sensors:
+### Heating-Cooling state 
+      termostato_ciccio_custom_function:
+        value_template: >-
+            {{ states('sensor.termostato_ciccio_function') }}
+        icon_template: >-
+            {% if is_state('sensor.termostato_ciccio_function', 'HEATING') %}
+               mdi:fire
+            {% elif is_state('sensor.termostato_ciccio_function', 'COOLING') %}
+               mdi:snowflake
+            {% endif %}
+        device_class: power
+    ### Custom_state
+      termostato_ciccio_custom_mode:
+        value_template: >-
+            {{ states('sensor.termostato_ciccio_mode') }}
+        icon_template: >-
+            {% if is_state('sensor.termostato_ciccio_mode', 'AUTOMATIC') %}
+               mdi:autorenew
+            {% elif is_state('sensor.termostato_ciccio_mode', 'MANUAL') %}
+               mdi:hand-right
+            {% elif is_state('sensor.termostato_ciccio_mode', 'BOOST') %}
+               mdi:play-speed
+            {% elif is_state('sensor.termostato_ciccio_mode', 'PROTECTION') or is_state('sensor.termostato_ciccio_mode', 'OFF') %}
+               mdi:power
+            {% endif %}
+        device_class: power
+    ### BOOS time remaining
+      termostato_ciccio_boost_mode:
+        friendly_name: 'Boost Remainig'
+        value_template: >-
+            {% if is_state('sensor.termostato_ciccio_mode', 'BOOST') %}
+            {{ states('sensor.termostato_ciccio_remaining_time') }}
+            {% else %}
+            noprint
+            {% endif %}
+        icon_template: mdi:progress-clock
+    ### PROTECTION time remaining
+      termostato_ciccio_protection_mode:
+        friendly_name: 'PROTECTION Remainig'
+        value_template: >-
+            {% if is_state('sensor.termostato_ciccio_mode', 'PROTECTION') %}
+            {{ states('sensor.termostato_ciccio_remaining_time') }}
+            {% else %}
+            noprint
+            {% endif %}
+        icon_template: mdi:progress-clock
+    ### Daily Activation Time 
+      termostato_ciccio_activation_time:
+        friendly_name: 'Active Today'
+        value_template: >-
+            {% set hours = states('sensor.termostato_ciccio_daily_activation') | float %}
+            {% set minutes = ((hours % 1) * 60) | int %}  
+            {% set hours = (hours - (hours % 1)) | int %}  
+            {{ '%02ih e %02im'%(hours, minutes) }}
+        icon_template: mdi:timelapse             
+### CLIMATE ####
+climate:
+
+  - platform: mqtt
+    name: ciccio
+    modes:
+      - "off"
+      - "on"
+      - "heat"
+      - "cool"
+    precision: 0.1
+    min_temp: 15
+    max_temp: 35
+    temp_step: 0.5
+    mode_state_topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status"
+    mode_state_template: >
+      {% if value_json.mode.upper() == "OFF" %}
+        off
+      {% elif value_json.mode.upper() == "PROTECTION" %}
+        off
+      {% elif value_json.function.upper() == "HEATING" %}
+        heat
+      {% elif value_json.function.upper() == "COOLING" %}
+        cool
+      {% elif value_json.mode.upper() == "AUTOMATIC" %}
+        on
+      {% elif value_json.mode.upper() == "MANUAL" %}
+        on
+      {% endif %}
+    mode_command_topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+    temperature_state_topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status"
+    temperature_state_template: "{{ value_json.setpoint|round (1) }}"
+    temperature_command_topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+    current_temperature_topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/status"
+    current_temperature_template: "{{ value_json.temperature }}"
+### INPUT SELECT
+input_select:
+
+  ciccio_boost_mode:
+    name: Boost Mode
+    options:
+      - "off"
+      - "Boost 30m"
+      - "Boost 60m"
+      - "Boost 90m"
+    icon: mdi:play-speed
+  ciccio_program:
+    name: Program Mode
+    options:
+      - "Inverno"
+      - "Notte"
+      - "A casa"
+      
+    icon: mdi:calendar-clock
+#########################################################
+#                                                       #
+#                      AUTOMATION                       #
+#                                                       #
+#########################################################
+automation:
+
+  - id: set_ciccio_boost_selector
+    alias: Set Boost Mode Selector ciccio
+    trigger:
+      - platform: mqtt
+        topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+      - entity_id: sensor.termostato_ciccio_mode
+        platform: state
+      - entity_id: sensor.termostato_ciccio_remaining_time_minutes
+        platform: state
+    action:
+     - delay: 00:00:40
+     - service: input_select.select_option
+       data:
+        entity_id: input_select.ciccio_boost_mode
+        option: >-
+            {% if not states.sensor.termostato_ciccio_mode.state.upper() == 'BOOST' %}
+            off
+            {% elif states.sensor.termostato_ciccio_mode.state.upper() == 'BOOST' and states.sensor.termostato_ciccio_remaining_time_minutes.state|int <= 30 %}
+            Boost 30m
+            {% elif states.sensor.termostato_ciccio_mode.state.upper() == 'BOOST' and states.sensor.termostato_ciccio_remaining_time_minutes.state|int <= 60 %}
+            Boost 60m
+            {% elif states.sensor.termostato_ciccio_mode.state.upper() == 'BOOST' and states.sensor.termostato_ciccio_remaining_time_minutes.state|int <= 90 %}
+            Boost 90m
+            {% endif %}
+  - id: set_ciccio_boost_mode    
+    alias: Set Boost Mode ciccio
+    trigger:
+      - entity_id: input_select.ciccio_boost_mode
+        platform: state
+    action:
+       service: mqtt.publish
+       data:
+         topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+         payload: >-
+            {% if is_state('input_select.ciccio_boost_mode', 'Boost 30m') %}
+               BOOST-30
+            {% elif is_state('input_select.ciccio_boost_mode', 'Boost 60m') %}
+               BOOST-60
+            {% elif is_state('input_select.ciccio_boost_mode', 'Boost 90m') %}
+               BOOST-90
+            {% elif is_state('input_select.ciccio_boost_mode', 'off') %}
+               AUTOMATIC
+            {% endif %}
+  - id: set_ciccio_program_selector
+    alias: Set Program Selector ciccio
+    trigger:
+      - platform: mqtt
+        topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+      - entity_id: sensor.termostato_ciccio_program
+        platform: state
+    action:
+     - delay: 00:00:40
+     - service: input_select.select_option
+       data:
+        entity_id: input_select.ciccio_program
+        option: "{{ states('sensor.termostato_ciccio_program') }}"
+  - id: set_ciccio_program    
+    alias: Set Program ciccio
+    trigger:
+      platform: state
+      entity_id: input_select.ciccio_program
+    action:
+       service: mqtt.publish
+       data:
+         topic: "/bticino/6c663d9f-46fd-c20f-e053-1e182d0aa61c/cmd"
+         payload: "{{ states('input_select.ciccio_program') }}"
+
+  - id: mattiols_x8000_webhook
+    mode: parallel
+    trigger:
+    - platform: webhook
+      webhook_id: mattiols_x_8000
+    condition: []
+    action:
+    - service: shell_command.send_webhooks
+      data_template:
+        data: '{{ (trigger.json |tojson) |safe }}'
+  - id: mattiols_x8000_alert
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.smarter_config_size
+        to: 'False'
+    condition: []
+    action:
+      - service: notify.persistent_notification
+        data:
+          message: Restart Bticino Addon and click on "get your code"
+          title: ERROR - Bticino Smarter X8000
+shell_command:
+  send_webhooks: >
+    curl -X POST -H 'Content-Type: application/json' -d '{{ data }}' http://d5113cf9-smarter-x8000-v2:5588/callback

@@ -1,0 +1,72 @@
+homeassistant:
+  customize:
+    sensor.myip:   
+        icon: mdi:ip-network
+    sensor.ssl:
+        icon: mdi:certificate
+    # automation.notify_when_external_ip_changes:
+    #     icon: mdi:ip-network-outline
+
+### https://prefetch.net/articles/checkcertificate.html
+### import ssl-cert-check file from github ###
+## cd /config/script
+## wget https://raw.githubusercontent.com/Matty9191/ssl-cert-check/master/ssl-cert-check
+## chmod 777 ./ssl-cert-check
+sensor:
+  - platform: command_line 
+    name: SSL_cert_file_expiration
+    unit_of_measurement: giorni 
+    scan_interval: 10800
+    command: "/config/scripts/ssl-cert-check -b -c /ssl/fullchain.pem | awk '{ print  -$6 }'"
+  - platform: command_line 
+    name: SSL_cert_installed_expiration
+    unit_of_measurement: giorni 
+    scan_interval: 10800
+    command: "/config/scripts/ssl-cert-check -b -f /config/scripts/jarviscloud_duckdns_org_domain | awk '{ print  -$6 }'"
+#   - platform: command_line 
+#     name: SSL_cert_plexoncloud_expiration
+#     unit_of_measurement: giorni 
+#     scan_interval: 10800
+#     command: "/config/scripts/ssl-cert-check -b -f /config/scripts/plexoncloud_duckdns_org_domain | awk '{ print  -$6 }'"
+
+#  - platform: dnsip 
+#    scan_interval: 10800
+
+# speedtestdotnet:
+#   scan_interval:
+#     minutes: 30
+#   monitored_conditions:
+#     - ping
+#     - download
+#     - upload
+
+# group:
+#   menu:
+#     name: Manutenzione
+#     #view: no
+#     entities:
+#      - sensor.myip
+#      - sensor.ssl
+#      - automation.let_s_encrypt_renewal
+#      - automation.notify_when_external_ip_changes
+    
+# automation:
+#     - alias: "Let's Encrypt Renewal"
+#       trigger:
+#       - platform: time
+#         at: '00:00:00'
+#       action:
+#       - service: hassio.addon_restart
+#         data:
+#           addon: core_letsencrypt
+#     - alias: Notify when external ip changes
+#       initial_state: on 
+#       trigger:
+#         platform: state 
+#         entity_id: sensor.myip
+#       action:
+#         data:
+#           message: "```informazione IP & SSL:
+#             \n  - IP della rete é {{states('sensor.myip')}}.
+#             \n  - Mancano {{states('sensor.ssl')}} giorni ai certificati.```"
+#         service: notify.ha_notifiche

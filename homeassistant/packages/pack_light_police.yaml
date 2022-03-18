@@ -1,0 +1,39 @@
+automation:
+  - alias: 'light police'
+    id: 'light_police'
+    description: ''
+    trigger:
+    - entity_id: alarm_control_panel.home_alarm
+      platform: state
+      to: 'triggered'
+    condition: []
+    action:
+    - data: {}
+      entity_id: script.light_cycle
+      service: homeassistant.turn_off
+    - data: {}
+      entity_id: script.loop_lights
+      service: homeassistant.turn_off
+    mode: single
+
+script:
+  light_cycle:
+    alias: Light Cycle
+    #mode: single
+    sequence:
+    - service: homeassistant.turn_on
+      entity_id: light.bf0f6143383255aa5fzzja
+      data_template:
+        brightness: 255
+        color_name: >
+          {% set colors = ['red', 'blue'] %}
+  #        {{ colors|random }}
+    - service: script.loop_lights
+  
+  loop_lights:
+    alias: Loop Lights
+    #mode: single
+    sequence:
+      - delay: 
+          seconds: 2
+      - service: script.light_cycle
