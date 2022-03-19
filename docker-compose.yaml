@@ -5,7 +5,7 @@ services:
     container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
     volumes:
-      - "${HOMEASSISTANT_CONFIGDIR}:/config"
+      - "${PWD}/homeassistant:/config"
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     privileged: true
@@ -22,7 +22,7 @@ services:
       - "${PWD}/mosquitto/data/:/mosquitto/data"
     restart: unless-stopped
     ports:
-      - "${MOSQUITTO_PORT}:${MOSQUITTO_PORT}"
+      - 1883:1883
 
   portainer:
     container_name: "portainer"
@@ -31,7 +31,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     ports:
-      - ${PORTAINER_PORT}:${PORTAINER_PORT}
+      - 9000:9000
       - 8000:8000
     environment:
       - "admin-password:blablabla"
