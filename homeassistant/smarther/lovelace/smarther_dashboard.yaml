@@ -1,3 +1,0 @@
-title: Thermostats
-views:
-  - !include /config/smarther/lovelace/thermostat_view.yaml

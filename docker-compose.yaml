@@ -23,6 +23,13 @@ services:
     restart: unless-stopped
     ports:
       - 1883:1883
+  
+  dehydrated-duckdns:
+    container_name: dehydrated-duckdns
+    image: alescim/dehydrated-duckdns
+    volumes:
+      - "${PWD}/dehydrated-duckdns/data/:/data"
+    restart: unless-stopped
 
   portainer:
     container_name: "portainer"
