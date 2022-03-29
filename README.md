@@ -11,7 +11,7 @@ This is a docker compose to create an Home Assistant stack with:
 
 Make a copy of `mosquitto/config/mosquitto.example.conf` file as `mosquitto/config/mosquitto.conf`
 
-Make a copy of `dehydrated-duckdns/data/options.example.json` file as `data/options.json`
+Make a copy of `dehydrated-duckdns/data/options.example.json` file as `dehydrated-duckdns/data/options.json`
 
 Make a copy of `.env.dist` file as `.env` under main directory and edit its content. E.g.:
 
